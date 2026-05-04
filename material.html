@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактив Хими - Спирт ба Биотүлш</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                enableMenu: false
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Lora:italic,wght@400;700&display=swap');
+        
+        body { font-family: 'Montserrat', sans-serif; scroll-behavior: smooth; overflow-x: hidden; }
+        .formula-text { font-family: 'Lora', serif; font-size: 1.1em; color: #1e293b; }
+        .page-content { display: none; min-height: 80vh; }
+        .page-content.active { display: block; animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .progress-indicator { height: 6px; background: #3b82f6; transition: width 0.4s ease; }
+        .molecule-bg { background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); }
+        .fact-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-top: 4px solid #3b82f6; }
+        .fact-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .step-badge { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #3b82f6; color: white; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Progress Top Bar -->
+    <div class="fixed top-0 left-0 w-full z-[100]">
+        <div id="progress-bar" class="progress-indicator" style="width: 11.1%"></div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="bg-white/95 border-b border-slate-200 py-4 px-6 sticky top-0 z-50 flex justify-between items-center backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-xl shadow-lg transform -rotate-3">🧪</div>
+            <h1 class="font-extrabold text-xl tracking-tight">ХИМИЙН <span class="text-blue-600 uppercase">Лаборатори</span></h1>
+        </div>
+        <div id="page-counter" class="text-[10px] font-black text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full uppercase tracking-widest border border-slate-200">Хуудас 1 / 9</div>
+    </header>
+
+    <main class="max-w-6xl mx-auto py-12 px-6 pb-32">
+        
+        <!-- Хуудас 1: Спиртийн тухай үндсэн ойлголт -->
+        <section id="page-1" class="page-content active space-y-10">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <span class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Бүлэг 1: Үндсэн хими</span>
+                    <h2 class="text-5xl font-black text-slate-900 leading-tight">Спирт гэж <br><span class="text-blue-600">юу вэ?</span></h2>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Химийн үүднээс авч үзвэл спиртүүд нь нүүрс устөрөгчийн нэг буюу хэд хэдэн устөрөгчийн атом нь <b>гидроксил (-OH)</b> бүлгээр халагдсан органик нэгдлүүд юм.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sm text-slate-400 mb-2">Ерөнхий томьёо</h4>
+                            <div class="formula-text text-2xl">$$C_n H_{2n+1} OH$$</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sm text-slate-400 mb-2">Функциональ бүлэг</h4>
+                            <div class="formula-text text-2xl text-blue-600">$$-OH$$</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-blue-600 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500 rounded-full opacity-50"></div>
+                    <h3 class="text-2xl font-bold mb-4 relative z-10">Түүхэн товчоон</h3>
+                    <p class="text-blue-50 leading-relaxed mb-6 relative z-10">
+                        Спиртийг гаргаж авах исгэх аргыг хүн төрөлхтөн хэдэн мянган жилийн өмнөөс мэддэг байсан ч цэвэр этанолыг анх 8-р зуунд Персийн химич Рази нэрэх аргаар гарган авчээ.
+                    </p>
+                    <div class="bg-blue-700/50 p-4 rounded-xl border border-blue-400/30">
+                        <p class="text-xs italic">"Алкоголь" гэх нэршил нь Арабын "аль-кухль" (маш нарийн нунтаг) гэсэн үгнээс гаралтай.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 2: 3D Молекул -->
+        <section id="page-2" class="page-content space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h2 class="text-4xl font-black">Этанолын 3D Бүтэц</h2>
+                    <p class="text-slate-500">Этанол ($C_2H_5OH$) нь нэг атомт ханасан спирт юм.</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-3 h-3 bg-gray-800 rounded-full"></span> Нүүрстөрөгч (C)</div>
+                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-3 h-3 bg-red-500 rounded-full"></span> Хүчилтөрөгч (O)</div>
+                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-3 h-3 bg-slate-200 border border-slate-300 rounded-full"></span> Устөрөгч (H)</div>
+                </div>
+            </div>
+            
+            <div class="grid lg:grid-cols-4 gap-8">
+                <div id="canvas-container" class="lg:col-span-3 h-[500px] molecule-bg rounded-[2.5rem] relative shadow-inner overflow-hidden cursor-move">
+                    <div class="absolute bottom-6 left-6 text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold">Хулганаар эргүүлж үзнэ үү</div>
+                    <div class="absolute top-6 right-6 px-4 py-2 bg-white/10 backdrop-blur rounded-full text-white text-xs border border-white/10">3D Simulation</div>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                        <h4 class="font-bold text-blue-600 mb-4 uppercase text-xs tracking-widest">Химийн холбоо</h4>
+                        <ul class="space-y-4 text-sm text-slate-600">
+                            <li class="flex items-start gap-3">
+                                <span class="text-blue-500">✔</span>
+                                <span>C-C холбоо нь туйлгүй ковалент холбоо</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-blue-500">✔</span>
+                                <span>C-O ба O-H холбоо нь хүчтэй туйлт холбоо</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-blue-500">✔</span>
+                                <span>Устөрөгчийн холбоо үүсгэх чадвартай</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl">
+                        <h4 class="font-bold mb-2">Мэдээд авахад илүүдэхгүй</h4>
+                        <p class="text-xs opacity-80 leading-relaxed">Спиртүүдийн молекул масс ихсэх тусам тэдгээрийн усанд уусах чанар буурч, буцлах температур нь нэмэгддэг.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 3: Биотүлш ба Хэрэглээ -->
+        <section id="page-3" class="page-content space-y-10">
+            <h2 class="text-4xl font-black text-emerald-700">Биотүлш: Ногоон эрчим хүч</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 space-y-6">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                        <h3 class="text-xl font-bold mb-4">Биоэтанол гэж юу вэ?</h3>
+                        <p class="text-slate-600 leading-relaxed mb-6">
+                            Биоэтанол нь эрдэнэ шиш, чихрийн нишингэ, улаан буудай зэрэг ургамлын гаралтай түүхий эдийг исгэх замаар гаргаж авсан этанол юм. Энэ нь бензинийг орлох эсвэл түүнтэй хольж хэрэглэх боломжтой <b>сэргээгдэх эрчим хүч</b> юм.
+                        </p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                                <p class="text-xs font-bold text-emerald-800 uppercase mb-2">E10 Түлш</p>
+                                <p class="text-sm text-emerald-700">10% Этанол + 90% Бензин. Ихэнх орчин үеийн автомашинд шууд хэрэглэдэг.</p>
+                            </div>
+                            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                                <p class="text-xs font-bold text-emerald-800 uppercase mb-2">E85 Түлш</p>
+                                <p class="text-sm text-emerald-700">85% Этанол. Тусгай "Flex-Fuel" хөдөлгүүртэй машинуудад зориулагдсан.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 p-8 rounded-[2rem] border border-amber-100 flex gap-6 items-center">
+                        <div class="text-4xl">🌱</div>
+                        <div>
+                            <h4 class="font-bold text-amber-900">Байгаль орчны ач холбогдол</h4>
+                            <p class="text-sm text-amber-800">Бензинтэй харьцуулахад хүлэмжийн хийн ялгарлыг 20-50% хүртэл бууруулдаг. Учир нь ургамал ургах явцдаа агаар дахь $CO_2$-ыг шингээж авдаг байна.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                        <h4 class="font-bold text-slate-800 mb-4">Давуу талууд:</h4>
+                        <ul class="space-y-3">
+                            <li class="flex gap-2 text-sm text-slate-600">✅ <span class="font-semibold">Сэргээгдэх:</span> Ургамал тарьж жил бүр нөхөн сэргээж болно.</li>
+                            <li class="flex gap-2 text-sm text-slate-600">✅ <span class="font-semibold">Цэвэр шаталт:</span> Хөө тортог бага ялгаруулна.</li>
+                            <li class="flex gap-2 text-sm text-slate-600">✅ <span class="font-semibold">Эдийн засаг:</span> Гадны нефтийн хамаарлыг бууруулна.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl">
+                        <h4 class="font-bold mb-2">Сул тал:</h4>
+                        <p class="text-xs opacity-70 leading-relaxed">Хүнсний зориулалттай үр тариаг түлшинд ашиглах нь хүнсний үнийг өсгөх эрсдэлтэй байдаг.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 4: Спиртийн нууц баримтууд -->
+        <section id="page-4" class="page-content space-y-8">
+            <h2 class="text-3xl font-black">Таны мэдэхгүй "Спиртийн Ертөнц"</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="fact-card glass-card p-8 rounded-[2.5rem]">
+                    <div class="text-4xl mb-6">🌌</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800 uppercase tracking-tight">Сансар огторгуйн спирт</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Манай галактикийн төв хэсэгт орших <b>Sagittarius B2</b> хэмээх асар том үүл нь тэр чигтээ спиртээс бүрддэг. Энэхүү үүл нь хэдэн тэрбум тэрбум литр винилын спиртийг агуулж байгаа бөгөөд "сансар огторгуй хурц үнэртэй" байх нэг шалтгаан болдог байна.
+                    </p>
+                </div>
+                <div class="fact-card glass-card p-8 rounded-[2.5rem] border-t-amber-500">
+                    <div class="text-4xl mb-6">🐒</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800 uppercase tracking-tight">Байгаль дахь "согтууруулах ундаа"</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Зарим төрлийн сармагчингууд болон заанууд исэж, спирт үүссэн жимсийг зориудаар олж идэж, согтох тохиолдол ажиглагддаг. Зарим шувууд иссэн жимс идсэнийхээ дараа нисэх тэнцвэрээ алддаг байна.
+                    </p>
+                </div>
+                <div class="fact-card glass-card p-8 rounded-[2.5rem] border-t-red-500">
+                    <div class="text-4xl mb-6">🩹</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800 uppercase tracking-tight">Яагаад 70% гэж?</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Анагаах ухаанд 100%-ийн спиртээс илүү 70%-ийн спиртийг ариутгалд ашигладаг. Учир нь 70%-ийн усан уусмал нь нянгийн эсийн ханыг нэвтэрч, доторх уургийг нь царцааж устгахдаа илүү үр дүнтэй байдаг.
+                    </p>
+                </div>
+                <div class="fact-card glass-card p-8 rounded-[2.5rem] border-t-indigo-500">
+                    <div class="text-4xl mb-6">🌡️</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800 uppercase tracking-tight">Термометрийн шингэн</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Спирт нь маш бага температурт (Этанол $-114^\circ C$) хөлддөг тул хойд туйл зэрэг маш хүйтэн газрын термометрт мөнгөн усны оронд өнгөт спиртийг ашигладаг.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 5: Биологийн нөлөө - Тархи -->
+        <section id="page-5" class="page-content space-y-10">
+            <h2 class="text-3xl font-black text-red-600">Биологийн нөлөө: Төв мэдрэлийн систем</h2>
+            <div class="bg-red-50 p-10 rounded-[3rem] border border-red-100 flex flex-col md:flex-row gap-12 items-center">
+                <div class="text-[120px] animate-pulse drop-shadow-2xl">🧠</div>
+                <div class="space-y-6">
+                    <h3 class="text-3xl font-bold text-red-900 leading-tight">Спирт тархинд хэрхэн нөлөөлдөг вэ?</h3>
+                    <p class="text-slate-700 leading-relaxed text-lg">
+                        Спиртийн молекул нь маш жижиг тул цуснаас тархи руу саадгүй нэвтэрдэг (Blood-brain barrier). Тэрээр тархины мэдрэлийн эсүүдийн хоорондын харилцааг удаашруулж, дараах өөрчлөлтүүдийг авчирдаг:
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-red-200">
+                            <span class="font-bold text-red-600 block mb-1">Церебеллум (Бага тархи):</span>
+                            <p class="text-sm">Тэнцвэр болон хөдөлгөөний зохицуулалт алдагдана.</p>
+                        </div>
+                        <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-red-200">
+                            <span class="font-bold text-red-600 block mb-1">Хиппокампус:</span>
+                            <p class="text-sm">Ой санамж түр зуур алдагдах, шинэ зүйл тогтоохгүй болох.</p>
+                        </div>
+                        <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-red-200">
+                            <span class="font-bold text-red-600 block mb-1">Урд хэсэг (Cortex):</span>
+                            <p class="text-sm">Шийдвэр гаргах, өөрийгөө хянах чадвар суларна.</p>
+                        </div>
+                        <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-red-200">
+                            <span class="font-bold text-red-600 block mb-1">Медулла:</span>
+                            <p class="text-sm">Хэт их хэрэглэвэл амьсгал болон зүрхний цохилтыг зогсоох аюултай.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 6: Биологийн нөлөө - Элэг -->
+        <section id="page-6" class="page-content space-y-10">
+            <h2 class="text-3xl font-black text-orange-600">Биологийн нөлөө: Элэгний "Лаборатори"</h2>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div class="space-y-6">
+                    <p class="text-slate-600 text-lg">Элэг бол спиртийг саармагжуулдаг биеийн цорын ганц гол эрхтэн юм. Тэрээр спиртийг дараах хоёр үе шаттайгаар задалдаг:</p>
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-2 h-full bg-orange-400"></div>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="step-badge">1</div>
+                                <span class="bg-red-500 text-white px-3 py-1 rounded-full text-[10px] font-bold">ОКСИДЖИХ ШАТ</span>
+                            </div>
+                            <div class="formula-text text-xl py-2 px-4 bg-slate-50 rounded-xl inline-block">
+                                $$\text{C}_2\text{H}_5\text{OH} \xrightarrow{\text{ADH}} \text{CH}_3\text{CHO}$$
+                            </div>
+                            <p class="text-sm text-slate-500 italic">Этанол нь <b>Ацетальдегид</b> (маш хортой бодис) болон хувирна.</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="step-badge">2</div>
+                                <span class="bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-bold">СААРМАГЖИХ ШАТ</span>
+                            </div>
+                            <div class="formula-text text-xl py-2 px-4 bg-slate-50 rounded-xl inline-block">
+                                $$\text{CH}_3\text{CHO} \xrightarrow{\text{ALDH}} \text{CH}_3\text{COO}^-$$
+                            </div>
+                            <p class="text-sm text-slate-500 italic">Ацетальдегид нь аюулгүй <b>Цууны хүчлийн ион</b> болон хувирна.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <div class="bg-slate-900 text-white p-10 rounded-[3rem] shadow-2xl space-y-6">
+                        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center text-3xl mb-4">⚠️</div>
+                        <h4 class="text-2xl font-bold">Яагаад шартдаг вэ?</h4>
+                        <p class="opacity-80 leading-relaxed">
+                            Хэрэв элэг 1-р шатанд үүссэн <b>Ацетальдегидыг</b> хангалттай хурдан задалж чадахгүй бол энэ бодис цусанд хуримтлагдана. Энэ нь толгой өвдөх, дотор эвгүйрхэх, зүрх дэлсэх зэрэг шаралтын гол шинж тэмдгийг үүсгэдэг.
+                        </p>
+                        <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                            <p class="text-xs text-orange-300 font-bold mb-1">МЭРГЭЖИЛТНИЙ ЗӨВЛӨГӨӨ:</p>
+                            <p class="text-[11px] opacity-60 italic">Спирт нь биеийг усгүйжүүлдэг тул элэгний задралд ус амин чухал үүрэгтэй.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 7: Спиртийн төрөл ба ангилал -->
+        <section id="page-7" class="page-content space-y-10">
+            <h2 class="text-3xl font-black">Спиртүүдийн гэр бүл</h2>
+            <p class="text-slate-500 text-lg">Бүх спиртүүд ижил биш. Тэдгээрийн бүтэц, зориулалт маш өөр байдаг.</p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+                    <div class="text-3xl">🧪</div>
+                    <h3 class="font-bold text-xl">Метанол ($CH_3OH$)</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Модны спирт гэж нэрлэдэг. Маш хортой. Өчүүхэн бага тун нь хараагүй болгох эсвэл үхэлд хүргэх аюултай. Үйлдвэрт уусгагч болгон ашигладаг.</p>
+                    <div class="text-xs font-mono bg-red-50 text-red-600 p-2 rounded">ХЭРЭГЛЭЖ БОЛОХГҮЙ!</div>
+                </div>
+                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+                    <div class="text-3xl">🍷</div>
+                    <h3 class="font-bold text-xl">Этанол ($C_2H_5OH$)</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Үр тарианы спирт. Согтууруулах ундаа, анагаах ухаан, гоо сайхан, түлшинд ашигладаг хамгийн өргөн хэрэглээтэй спирт.</p>
+                    <div class="text-xs font-mono bg-blue-50 text-blue-600 p-2 rounded">C-C-OH</div>
+                </div>
+                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+                    <div class="text-3xl">🍬</div>
+                    <h3 class="font-bold text-xl">Глицерин ($C_3H_8O_3$)</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Гурван атомт спирт. Чихэрлэг амттай, өтгөн шингэн. Хүнсний нэмэлт, чихэр, тос, саван үйлдвэрлэхэд ашигладаг.</p>
+                    <div class="text-xs font-mono bg-emerald-50 text-emerald-600 p-2 rounded">Олон атомт</div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100">
+                <h4 class="font-bold text-indigo-900 mb-4">Физик шинж чанар:</h4>
+                <div class="grid md:grid-cols-4 gap-4">
+                    <div class="text-center p-4">
+                        <div class="text-2xl mb-1">🌡️</div>
+                        <p class="text-xs font-bold">Буцлах температур</p>
+                        <p class="text-sm text-indigo-700">Этанол: $78.3^\circ C$</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-2xl mb-1">💧</div>
+                        <p class="text-xs font-bold">Уусах чанар</p>
+                        <p class="text-sm text-indigo-700">Устай дурын харьцаагаар уусна</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-2xl mb-1">🌈</div>
+                        <p class="text-xs font-bold">Өнгө</p>
+                        <p class="text-sm text-indigo-700">Өнгөгүй, тунгалаг</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-2xl mb-1">👃</div>
+                        <p class="text-xs font-bold">Үнэр</p>
+                        <p class="text-sm text-indigo-700">Өвөрмөц хурц үнэртэй</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Хуудас 8: Лаборатори - Уусгах чадвар -->
+        <section id="page-8" class="page-content space-y-10 text-center">
+            <h2 class="text-3xl font-black">Виртуал Туршилт: Спирт уусгагч болох нь</h2>
+            <p class="text-slate-500 max-w-2xl mx-auto italic">Спирт нь молекулдаа туйлт (-OH) болон туйлгүй ($C_2H_5-$) хэсгийг хоёуланг нь агуулдаг тул "универсал" уусгагч болдог.</p>
+            
+            <div class="flex flex-col md:flex-row gap-12 items-center justify-center py-12 bg-white rounded-[3rem] shadow-sm border border-slate-100">
+                <div class="text-center space-y-4">
+                    <div class="w-32 h-44 border-8 border-t-0 border-blue-200 rounded-b-[3rem] relative mx-auto bg-blue-50/20">
+                        <div id="liquid-water" class="absolute bottom-0 left-0 w-full h-2/3 bg-blue-400/30 rounded-b-[2.5rem] transition-all duration-1000"></div>
+                        <div id="particles-water" class="absolute inset-0"></div>
+                    </div>
+                    <p class="font-black text-slate-400 uppercase text-xs tracking-widest">Ус ($H_2O$)</p>
+                </div>
+                
+                <div class="flex flex-col gap-4">
+                    <button onclick="runExperiment('salt')" class="px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-blue-600 hover:-translate-y-1 transition-all active:scale-95 shadow-lg">+ Давс (Ионт)</button>
+                    <button onclick="runExperiment('oil')" class="px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-emerald-600 hover:-translate-y-1 transition-all active:scale-95 shadow-lg">+ Тос (Туйлгүй)</button>
+                </div>
+
+                <div class="text-center space-y-4">
+                    <div class="w-32 h-44 border-8 border-t-0 border-indigo-200 rounded-b-[3rem] relative mx-auto bg-indigo-50/20">
+                        <div id="liquid-alcohol" class="absolute bottom-0 left-0 w-full h-2/3 bg-indigo-500/30 rounded-b-[2.5rem] transition-all duration-1000"></div>
+                        <div id="particles-alcohol" class="absolute inset-0"></div>
+                    </div>
+                    <p class="font-black text-indigo-400 uppercase text-xs tracking-widest">Этанол ($C_2H_5OH$)</p>
+                </div>
+            </div>
+            
+            <div id="lab-message" class="bg-indigo-900 text-white p-8 rounded-[2.5rem] shadow-xl text-center min-h-[120px] flex flex-col items-center justify-center space-y-2">
+                <p class="text-indigo-300 font-bold uppercase text-[10px] tracking-widest">Туршилтын үр дүн</p>
+                <div id="lab-result-text" class="text-lg">Дээрх товчлуур дээр дарж туршилтыг эхлүүлнэ үү</div>
+            </div>
+        </section>
+
+        <!-- Хуудас 9: Тест -->
+        <section id="page-9" class="page-content space-y-8">
+            <div class="text-center py-6">
+                <h2 class="text-4xl font-black">Мэдлэгийн сорил</h2>
+                <p id="quiz-progress" class="text-blue-500 font-bold mt-2 uppercase tracking-widest text-xs">Асуулт 1 / 3</p>
+            </div>
+            <div id="quiz-container" class="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 max-w-3xl mx-auto min-h-[450px] flex flex-col justify-center">
+                <!-- Quiz content dynamically added -->
+            </div>
+        </section>
+
+        <!-- Final Page: Results -->
+        <section id="page-result" class="page-content space-y-10 text-center py-20">
+            <div class="text-9xl mb-6">🏆</div>
+            <h2 class="text-6xl font-black text-slate-900 leading-tight">Аяллыг амжилттай <br>дуусгалаа!</h2>
+            <div class="inline-block p-1.5 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-[3.5rem] shadow-2xl transform rotate-1">
+                <div class="bg-white px-20 py-12 rounded-[3rem]">
+                    <p class="text-slate-400 font-bold uppercase tracking-[0.3em] text-xs mb-4">Таны эцсийн оноо</p>
+                    <div id="final-score" class="text-9xl font-black text-slate-900">0/3</div>
+                </div>
+            </div>
+            <p class="text-slate-500 max-w-lg mx-auto text-lg leading-relaxed">Та спиртийн химийн бүтэц, биотүлшний ач холбогдол болон хүний биед үзүүлэх нөлөөг бүрэн судалж дууслаа.</p>
+            <div class="flex gap-4 justify-center">
+                <button onclick="location.reload()" class="bg-slate-900 text-white px-12 py-5 rounded-full font-bold hover:bg-blue-600 transition-all shadow-xl hover:-translate-y-1">Дахин эхлэх</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Navigation Footer -->
+    <footer class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-2xl border-t border-slate-200 py-6 px-10 z-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <button id="prev-btn" onclick="navPage(-1)" class="px-8 py-3 rounded-2xl font-bold text-slate-400 hover:bg-slate-100 disabled:opacity-0 transition-all">Өмнөх</button>
+            <div class="flex gap-2.5" id="dots-container">
+                <!-- Dots generated by JS -->
+            </div>
+            <button id="next-btn" onclick="navPage(1)" class="px-10 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 shadow-xl shadow-blue-200 active:scale-95 transition-all">Дараах →</button>
+        </div>
+    </footer>
+
+    <script>
+        let currentPage = 1;
+        const totalPages = 9;
+        let score = 0;
+        let currentQuizIdx = 0;
+
+        const quizData = [
+            {
+                q: "Яагаад биоэтанолыг 'сэргээгдэх' эрчим хүч гэж нэрлэдэг вэ?",
+                options: [
+                    "Учир нь түүнийг ургамлаас гаргаж авдаг бөгөөд жил бүр нөхөн тарьж болдог",
+                    "Учир нь тэр маш хурдан шатдаг",
+                    "Учир нь түүнийг газрын тосноос гаргаж авдаг"
+                ],
+                correct: 0
+            },
+            {
+                q: "Элэг спиртийг задлахдаа үүсгэдэг 'шаралт' үүсгэгч хортой бодис юу вэ?",
+                options: [
+                    "Цууны хүчил",
+                    "Ацетальдегид",
+                    "Глицерин"
+                ],
+                correct: 1
+            },
+            {
+                q: "Анагаах ухаанд яагаад 70%-ийн концентрацитай спиртийг илүүд үздэг вэ?",
+                options: [
+                    "Учир нь 100% спирт маш үнэтэй",
+                    "Учир нь 70% спирт нь нянгийн эсийн ханыг нэвтэрч уургийг нь царцаах чадвар сайтай",
+                    "Учир нь 70% спирт нь хурдан ууршдаггүй"
+                ],
+                correct: 1
+            }
+        ];
+
+        function navPage(dir) {
+            goToPage(currentPage + dir);
+        }
+
+        function goToPage(p) {
+            if (p < 1 || p > totalPages + 1) return;
+            
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            
+            if (p <= totalPages) {
+                document.getElementById(`page-${p}`).classList.add('active');
+                currentPage = p;
+                document.getElementById('page-counter').innerText = `Хуудас ${p} / ${totalPages}`;
+            } else {
+                document.getElementById('page-result').classList.add('active');
+                currentPage = totalPages + 1;
+                document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
+            }
+
+            document.getElementById('progress-bar').style.width = `${(p / totalPages) * 100}%`;
+            document.getElementById('prev-btn').disabled = (p === 1);
+            document.getElementById('next-btn').innerText = (p >= totalPages) ? "Үр дүн" : "Дараах →";
+            
+            updateDots();
+            if (p === 9) renderQuiz();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateDots() {
+            const container = document.getElementById('dots-container');
+            container.innerHTML = '';
+            for(let i=1; i<=totalPages; i++) {
+                const dot = document.createElement('div');
+                dot.className = `h-1.5 rounded-full transition-all duration-500 ${i === currentPage ? 'w-8 bg-blue-600' : 'w-2 bg-slate-200'}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function runExperiment(type) {
+            const waterP = document.getElementById('particles-water');
+            const alcoholP = document.getElementById('particles-alcohol');
+            const resultText = document.getElementById('lab-result-text');
+            
+            waterP.innerHTML = ''; alcoholP.innerHTML = '';
+
+            if (type === 'salt') {
+                resultText.innerHTML = "<b>Давс (NaCl)</b> нь ионт нэгдэл тул туйлт шинж чанартай <b>УС</b> болон <b>СПИРТ</b>-ийн хоёуланд нь сайн уусна. Спирт нь гидроксил бүлгийнхээ ачаар давсны ионуудыг хүрээлж уусгадаг.";
+                createParticles(waterP, '#ffffff', 25);
+                createParticles(alcoholP, '#ffffff', 20);
+            } else {
+                resultText.innerHTML = "<b>Тос</b> нь туйлгүй нэгдэл тул <b>УСАНД</b> огт уусахгүй тусгаарлагдана. Харин <b>СПИРТ</b> нь нүүрс устөрөгчийн үлдэгдэл ($C_2H_5-$) хэсгээрээ тосны молекулуудтай харилцан үйлчилж түүнийг уусгаж чадна.";
+                createParticles(alcoholP, '#fbbf24', 25);
+            }
+        }
+
+        function createParticles(parent, color, count) {
+            for(let i=0; i<count; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'absolute';
+                p.style.width = '6px';
+                p.style.height = '6px';
+                p.style.background = color;
+                p.style.borderRadius = '50%';
+                p.style.left = Math.random() * 80 + 10 + '%';
+                p.style.top = '10%';
+                p.style.opacity = '1';
+                p.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                parent.appendChild(p);
+                setTimeout(() => {
+                    p.style.top = '70%';
+                    p.style.opacity = '0';
+                    p.style.transform = 'scale(0.5)';
+                }, 50);
+            }
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            const data = quizData[currentQuizIdx];
+            document.getElementById('quiz-progress').innerText = `Асуулт ${currentQuizIdx + 1} / ${quizData.length}`;
+            
+            container.innerHTML = `
+                <h3 class="text-2xl font-black text-slate-800 mb-10 leading-snug">${data.q}</h3>
+                <div class="grid gap-4">
+                    ${data.options.map((opt, i) => `
+                        <button onclick="handleAnswer(${i})" class="w-full text-left p-6 border-2 border-slate-100 rounded-3xl hover:border-blue-500 hover:bg-blue-50 transition-all font-semibold flex items-center gap-6 group">
+                            <span class="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-all font-black text-slate-500">${String.fromCharCode(65 + i)}</span>
+                            <span class="text-slate-600 group-hover:text-blue-900">${opt}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function handleAnswer(idx) {
+            if (idx === quizData[currentQuizIdx].correct) score++;
+            
+            if (currentQuizIdx < quizData.length - 1) {
+                currentQuizIdx++;
+                renderQuiz();
+            } else {
+                navPage(1);
+            }
+        }
+
+        // --- 3D THREE.JS RENDERER (Updated and Fixed) ---
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const group = new THREE.Group();
+
+            const createAtom = (x, y, z, color, size) => {
+                const geo = new THREE.SphereGeometry(size, 32, 32);
+                const mat = new THREE.MeshPhongMaterial({ 
+                    color: color, 
+                    shininess: 100, 
+                    specular: 0x444444 
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(x, y, z);
+                group.add(mesh);
+                return mesh;
+            };
+
+            const createBond = (v1, v2) => {
+                const dist = v1.distanceTo(v2);
+                const geo = new THREE.CylinderGeometry(0.12, 0.12, dist, 16);
+                const mat = new THREE.MeshPhongMaterial({ color: 0xdddddd });
+                const mesh = new THREE.Mesh(geo, mat);
+                const mid = v1.clone().lerp(v2, 0.5);
+                mesh.position.copy(mid);
+                mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v2.clone().sub(v1).normalize());
+                group.add(mesh);
+            };
+
+            // Ethanol Geometry: CH3-CH2-OH
+            const pC1 = new THREE.Vector3(-1.2, 0, 0);
+            const pC2 = new THREE.Vector3(0.8, 0, 0);
+            const pO = new THREE.Vector3(2.2, 0.8, 0);
+            const pH_O = new THREE.Vector3(2.8, 0.4, 0.8);
+
+            // Core atoms
+            createAtom(pC1.x, pC1.y, pC1.z, 0x222222, 0.55); // C1
+            createAtom(pC2.x, pC2.y, pC2.z, 0x222222, 0.55); // C2
+            createAtom(pO.x, pO.y, pO.z, 0xff3333, 0.45);    // O
+            createAtom(pH_O.x, pH_O.y, pH_O.z, 0xeeeeee, 0.25); // H on O
+
+            createBond(pC1, pC2);
+            createBond(pC2, pO);
+            createBond(pO, pH_O);
+
+            // Hydrogens on C1 (CH3)
+            const hC1 = [
+                new THREE.Vector3(-1.8, 0.6, 0.6),
+                new THREE.Vector3(-1.8, -0.6, -0.6),
+                new THREE.Vector3(-1.2, 0, -1.0)
+            ];
+            hC1.forEach(p => {
+                createAtom(p.x, p.y, p.z, 0xeeeeee, 0.25);
+                createBond(pC1, p);
+            });
+
+            // Hydrogens on C2 (CH2)
+            const hC2 = [
+                new THREE.Vector3(0.8, 0.7, -0.7),
+                new THREE.Vector3(0.8, -0.7, 0.7)
+            ];
+            hC2.forEach(p => {
+                createAtom(p.x, p.y, p.z, 0xeeeeee, 0.25);
+                createBond(pC2, p);
+            });
+
+            scene.add(group);
+            
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+            const light1 = new THREE.PointLight(0xffffff, 1);
+            light1.position.set(10, 10, 10);
+            scene.add(light1);
+            const light2 = new THREE.PointLight(0xffffff, 0.5);
+            light2.position.set(-10, -10, 10);
+            scene.add(light2);
+
+            camera.position.z = 6;
+
+            // Interaction
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', () => isDragging = true);
+            window.addEventListener('mouseup', () => isDragging = false);
+            container.addEventListener('mousemove', (e) => {
+                const deltaMove = {
+                    x: e.offsetX - previousMousePosition.x,
+                    y: e.offsetY - previousMousePosition.y
+                };
+
+                if(isDragging) {
+                    const deltaRotationQuaternion = new THREE.Quaternion()
+                        .setFromEuler(new THREE.Euler(
+                            (deltaMove.y * Math.PI / 180) * 0.5,
+                            (deltaMove.x * Math.PI / 180) * 0.5,
+                            0,
+                            'XYZ'
+                        ));
+                    group.quaternion.multiplyQuaternions(deltaRotationQuaternion, group.quaternion);
+                }
+                previousMousePosition = { x: e.offsetX, y: e.offsetY };
+            });
+
+            // Touch support
+            container.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }, {passive: true});
+            window.addEventListener('touchend', () => isDragging = false);
+            container.addEventListener('touchmove', (e) => {
+                if(isDragging) {
+                    const deltaMove = {
+                        x: e.touches[0].clientX - previousMousePosition.x,
+                        y: e.touches[0].clientY - previousMousePosition.y
+                    };
+                    const deltaRotationQuaternion = new THREE.Quaternion()
+                        .setFromEuler(new THREE.Euler(
+                            (deltaMove.y * Math.PI / 180) * 0.5,
+                            (deltaMove.x * Math.PI / 180) * 0.5,
+                            0,
+                            'XYZ'
+                        ));
+                    group.quaternion.multiplyQuaternions(deltaRotationQuaternion, group.quaternion);
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, {passive: true});
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if(!isDragging) {
+                    group.rotation.y += 0.005;
+                    group.rotation.z += 0.002;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        window.onload = () => {
+            init3D();
+            updateDots();
+        };
+    </script>
+</body>
+</html>
